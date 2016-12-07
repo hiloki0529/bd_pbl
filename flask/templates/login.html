@@ -1,0 +1,22 @@
+{% extends "cover.html" %}
+{% block title %}Sign in{% endblock %}
+{% block contain %}
+<h1 class="cover-heading">Sign In</h1><br>
+{% if failed %}
+<div class="alert alert-danger" role="alert">
+    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+    <strong>Failed!</strong> Your username or password was incorrect. Please try agein. {{ failed }}
+</div>
+{% endif %}
+<form action="" method="POST" role="form">
+    <div class="form-group">
+        <label>Username</label>
+	<input name="username" type="text" class="form-control">
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+	<input name="password" type="password" class="form-control">
+   </div>
+   <button class="btn btn-default btn-lg" type="submit">Sign in</button>
+</form>
+{% endblock %}
