@@ -4,7 +4,7 @@
 from flask import Flask, render_template, request, session, redirect, jsonify
 from datetime import timedelta, datetime
 import re
-from db import login
+from db import login, create
 
 app = Flask(__name__)
 app.secret_key = "AdfivjArifgalfgngav248dgFVifg:p4932hdvs"
@@ -15,14 +15,14 @@ def before_request():
     app.permanent_session_lifetime = timedelta(minutes=10)
     if session.get("username") is not None:
         return
-    elif request.path == "/login" or request.path == "/sign_up":
+    elif request.path == "/login" or request.path == "/sign_up" or request.path == "/deny":
         return
     else:
         return redirect("/login")
 
 @app.route("/")
 def hello():
-    return render_template("main.html")
+    return render_template("main.html",name=session["password"])
 
 @app.route("/hello", methods=["POST","GET"])
 def hi():
@@ -42,7 +42,7 @@ def login_page():
             else:
                 session["wrong"] += 1
         if session["wrong"] >= 3:
-            failed = " FAILED!!!!!!"
+            return redirect("/deny")
         else:
             failed="failed"
     else:
@@ -56,9 +56,16 @@ def logout():
 
 @app.route("/sign_up", methods = ["GET", "POST"])
 def signup():
+    errorCom = {}
     if request.method == "POST":
-        return redirect("/")
-    return render_template("signup.html")
+        flg = create(form)
+        if not flg["passwordError"]:
+            errorCom["password"] = "This username is already used."
+        if not flg["usernameError"]:
+            errorCom["username"] = "Your password must be at least 8 characters."
+        if len(errorCom) == 0:
+            return redirect("/")
+    return render_template("signup.html", errorCom=errorCom)
 
 @app.route("/deny", methods = ["GET"])
 def deny():

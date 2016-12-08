@@ -2,13 +2,14 @@
 
 import sqlite3
 import hashlib
+import os
 
-PATH = "db/app.db"
+PATH = "./db/app.db"
 
 def hashing(form):
     form = dict(form)
-    for key,value in form.items():
-        form[key] = hashlib.sha256(value[0]).hexdigest()
+    form["password"] = hashlib.sha256(form["password"][0]).hexdigest()
+    form["username"] = form["username"][0]
     return form
 
 def login(form):
@@ -28,10 +29,20 @@ def login(form):
     return returner
 
 def create(form):
+    returner = {}
     if login(form)[0]:
-        return False
-    if len(form["password"]) > 8:
-        return False
+        userError = False
+    else:
+        userError = True
+    if len(form["password"]) < 8:
+        passError = False
+    else:
+        passError = True
+    returner["usernameError"] = userError
+    returner["passwordError"] = passError
+    for value in returner.values():
+        if not value:
+            return returner
     con = sqlite3.connect(PATH)
     c = con.cursor()
     form = hashing(form)
@@ -39,7 +50,8 @@ def create(form):
     con = c.execute(sql)
     con.commit()
     con.close()
+    return returner
 
 if __name__ == "__main__":
-    form = {"username":["hiroki"], "password":["tani"]}
-    print login(form)
+    form = {"username":["hirki"], "password":["tani"]}
+    print create(form)
