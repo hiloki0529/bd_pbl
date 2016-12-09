@@ -38,8 +38,13 @@ def create(form):
         passError = False
     else:
         passError = True
+    if form["password"] == form["again"]:
+        againError = True
+    else:
+        againError = False
     returner["usernameError"] = userError
     returner["passwordError"] = passError
+    returner["againError"] = againError
     for value in returner.values():
         if not value:
             return returner
