@@ -22,7 +22,7 @@ def before_request():
 
 @app.route("/")
 def hello():
-    return render_template("main.html",name=session["password"])
+    return render_template("main.html",name=session["username"])
 
 @app.route("/hello", methods=["POST","GET"])
 def hi():
@@ -56,16 +56,25 @@ def logout():
 
 @app.route("/sign_up", methods = ["GET", "POST"])
 def signup():
-    errorCom = {}
+    error = []
     if request.method == "POST":
-        flg = create(form)
+        flg = create(request.form)
         if not flg["passwordError"]:
-            errorCom["password"] = "This username is already used."
+            error[0] = "This username is already used."
+        else:
+            error[0] = None
         if not flg["usernameError"]:
-            errorCom["username"] = "Your password must be at least 8 characters."
+            error[1] = "Your password must be at least 8 characters."
+        else:
+            error[1] = None
+        if not flg["againError"]:
+            error[2] = "Password must be match."
+        else:
+            error[2] = None
+        print error
         if len(errorCom) == 0:
             return redirect("/")
-    return render_template("signup.html", errorCom=errorCom)
+    return render_template("signup.html", error=error)
 
 @app.route("/deny", methods = ["GET"])
 def deny():
