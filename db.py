@@ -24,8 +24,12 @@ def login(form):
             returner.append(True)
         else:
             returner.append(False)
+            sql = "update users set error = %(error)d where '%(username)s"%form
+            con = c.excute(sql)
+            con.commit()
         return returner
     returner = [False]
+    con.close()
     return returner
 
 def create(form):
