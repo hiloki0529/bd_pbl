@@ -32,7 +32,6 @@ def login(form):
             returner["password"] = False
             row["error"] += 1
             sql = "update users set error = {error} where name = '{name}'".format(**row)
-            print sql
             con = connector.execute(sql)
         if row["error"] < 3:
             returner["lock"] = True
@@ -42,7 +41,6 @@ def login(form):
             row["auth"] = returner["password"]
             sql = "insert into {name}(datetime,auth) values(datetime('now'),'{auth}')".format(**row)
             con = connector.execute(sql)
-            print sql
         connector.commit()
         connector.close()
         return returner
@@ -51,34 +49,42 @@ def login(form):
 
 def create(form):
     returner = {}
-    if login(form)[0]:
+    if check(form["username"]):
         userError = False
     else:
         userError = True
-    if len(form["password"]) < 8:
+    if len(form["password"]) > 7:
         passError = False
     else:
         passError = True
     if form["password"] == form["again"]:
-        againError = True
-    else:
         againError = False
+    else:
+        againError = True
     returner["usernameError"] = userError
     returner["passwordError"] = passError
     returner["againError"] = againError
     for value in returner.values():
-        if not value:
+        if value: 
             return returner
     con = sqlite3.connect(PATH)
-    c = con.cursor()
     form = hashing(form)
     sql = "insert into users(name,password) values('%(username)s','%(password)s')"%form
-    con = c.execute(sql)
-    sql = "create table %(username)(id integer primary key, datetime text, auth text)"
-    con = c.execute(sql)
+    con.execute(sql)
+    sql = "create table %(username)s (id integer primary key, datetime text, auth text)"%form
+    print sql
+    con.execute(sql)
     con.commit()
     con.close()
     return returner
+
+def check(username):
+    con = sqlite3.connect(PATH)
+    sql = "select * from users where name = '%s'"%username
+    c = con.execute(sql)
+    for v in c:
+        return False
+    return True
 
 def getLog(username):
     con = sqlite3.connect(PATH)

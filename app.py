@@ -55,23 +55,29 @@ def logout():
 
 @app.route("/sign_up", methods = ["GET", "POST"])
 def signup():
-    error = []
+    error = {}
     if request.method == "POST":
+        print "hello"
         flg = create(request.form)
-        if not flg["passwordError"]:
-            error.append("This username is already used.")
+        if flg["passwordError"]:
+            mess = "Your password must be at least 8 characters."
         else:
-            error.append(None)
-        if not flg["usernameError"]:
-            error.append("Your password must be at least 8 characters.")
+            mess = None
+        error["password"] = mess
+        if flg["usernameError"]:
+            mess = "This username is already used."
         else:
-            error.append("")
-        if not flg["againError"]:
-            error.append("Passwords must match.")
+            mess = None
+        error["username"] = mess
+        if flg["againError"]:
+            mess = "Passwords must match."
         else:
-            error.append(None)
-        if len(error) == 0:
+            mess = None
+        error["again"] = mess
+        if len(filter(lambda x:type(x) is str, error.values())) == 0:
+            session["username"] = request.form["username"]
             return redirect("/")
+    print error
     return render_template("signup.html", error=error)
 
 @app.route("/deny", methods = ["GET"])
