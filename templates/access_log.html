@@ -1,0 +1,30 @@
+{% extends "main.html" %}
+{% block title %}access log{% endblock %}
+{% block log %}active{% endblock %}
+{% block content %}
+<h2 class="sub-header">Access Log</h2>
+<table class="table table-straped table-hover">
+    <thead>
+        <tr>
+            <th>Datetime</th>
+            <th>Login</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for values in logs %}
+        {% if values["auth"] == "True" %}
+        <tr class="success">
+        {% else %}
+        <tr class="danger">
+        {% endif %}
+            <td>{{ values["datetime"] }}</td>
+            {% if values["auth"] == "True" %}
+            <td>Success</td>
+            {% else %}
+            <td>Failed</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

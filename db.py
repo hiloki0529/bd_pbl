@@ -13,23 +13,40 @@ def hashing(form):
     return form
 
 def login(form):
+    returner = {}
     connector = sqlite3.connect(PATH)
-    c  = connector.cursor()
+    connector.row_factory = sqlite3.Row
     form = hashing(form)
     sql = "select * from users where name = '%(username)s'"%form
-    con = c.execute(sql)
+    con = connector.execute(sql)
     for row in con:
-        returner = [True]
-        if row[2] == form["password"]:
-            returner.append(True)
+        row = dict(row)
+        returner["username"] = True
+        if row["password"] == form["password"]:
+            returner["password"] = True
+            if row["error"] < 3:
+                row["error"] = 0
+                sql = "update users set error = {error} where name = '{name}'".format(**row)
+                con = connector.execute(sql)
         else:
-            returner.append(False)
-            sql = "update users set error = %(error)d where '%(username)s"%form
-            con = c.excute(sql)
-            con.commit()
+            returner["password"] = False
+            row["error"] += 1
+            sql = "update users set error = {error} where name = '{name}'".format(**row)
+            print sql
+            con = connector.execute(sql)
+        if row["error"] < 3:
+            returner["lock"] = True
+        else:
+            returner["lock"] = False
+        if row["error"] <= 3:
+            row["auth"] = returner["password"]
+            sql = "insert into {name}(datetime,auth) values(datetime('now'),'{auth}')".format(**row)
+            con = connector.execute(sql)
+            print sql
+        connector.commit()
+        connector.close()
         return returner
-    returner = [False]
-    con.close()
+    returner["username"] = False
     return returner
 
 def create(form):
@@ -57,10 +74,20 @@ def create(form):
     form = hashing(form)
     sql = "insert into users(name,password) values('%(username)s','%(password)s')"%form
     con = c.execute(sql)
+    sql = "create table %(username)(id integer primary key, datetime text, auth text)"
+    con = c.execute(sql)
     con.commit()
     con.close()
     return returner
 
+def getLog(username):
+    con = sqlite3.connect(PATH)
+    con.row_factory = sqlite3.Row
+    sql = "select * from %s"%username
+    c = con.execute(sql)
+    c = list(map(dict,c))
+    return c
+
 if __name__ == "__main__":
-    form = {"username":["hirki"], "password":["tani"]}
-    print create(form)
+    username = "hiroki"
+    getLog(username)
