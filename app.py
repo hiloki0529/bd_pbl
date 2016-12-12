@@ -89,5 +89,18 @@ def access_log():
     log = getLog(session["username"])
     return render_template("access_log.html", logs=log)
 
+@app.route("/auth_pic", methods = ["GET","POST"])
+def auth_pic():
+    error = None
+    if request.method == "POST":
+        if authPic(request.form):
+            session["auth"] = True
+            return redirect("/")
+        else:
+            error = "incorrect."
+    pic = getPic()
+    pic["error"] = error
+    return render_template("auth_pic.html", pic=pic)
+
 if __name__=="__main__":
 	app.run(host="0.0.0.0", port=8080)

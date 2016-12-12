@@ -3,6 +3,7 @@
 import sqlite3
 import hashlib
 import os
+import random
 
 PATH = "./db/app.db"
 
@@ -94,6 +95,20 @@ def getLog(username):
     c = list(map(dict,c))
     return c
 
+def getPic():
+    con = sqlite3.connect(PATH)
+    con.row_factory = sqlite3.Row
+    sql = "select max(id) from pic_auth"
+    c = con.execute(sql)
+    id_max = c.fetchone()
+    id_max = id_max[0]
+    id = random.randint(1,id_max)
+    print id
+    sql = "select * from pic_auth where id = %d"%id
+    c = con.execute(sql)
+    row = dict(c.fetchone())
+    print row
+    return row
+
 if __name__ == "__main__":
-    username = "hiroki"
-    getLog(username)
+    pic_auth()
