@@ -4,8 +4,9 @@ import sqlite3
 import hashlib
 import os
 import random
+import datetime
 
-PATH = "./db/app.db"
+PATH = os.path.join(os.path.dirname(__file__),"db/app.db")
 
 def hashing(form):
     form = dict(form)
@@ -40,7 +41,8 @@ def login(form):
             returner["lock"] = False
         if row["error"] <= 3:
             row["auth"] = returner["password"]
-            sql = "insert into {name}(datetime,auth) values(datetime('now'),'{auth}')".format(**row)
+            row["datetime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sql = "insert into {name}(datetime,auth) values('{datetime}','{auth}')".format(**row)
             con = connector.execute(sql)
         connector.commit()
         connector.close()
@@ -73,7 +75,6 @@ def create(form):
     sql = "insert into users(name,password) values('%(username)s','%(password)s')"%form
     con.execute(sql)
     sql = "create table %(username)s (id integer primary key, datetime text, auth text)"%form
-    print sql
     con.execute(sql)
     con.commit()
     con.close()
@@ -103,11 +104,9 @@ def getPic():
     id_max = c.fetchone()
     id_max = id_max[0]
     id = random.randint(1,id_max)
-    print id
     sql = "select * from pic_auth where id = %d"%id
     c = con.execute(sql)
     row = dict(c.fetchone())
-    print row
     return row
 
 if __name__ == "__main__":

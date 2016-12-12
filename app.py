@@ -57,7 +57,6 @@ def logout():
 def signup():
     error = {}
     if request.method == "POST":
-        print "hello"
         flg = create(request.form)
         if flg["passwordError"]:
             mess = "Your password must be at least 8 characters."
@@ -77,7 +76,6 @@ def signup():
         if len(filter(lambda x:type(x) is str, error.values())) == 0:
             session["username"] = request.form["username"]
             return redirect("/")
-    print error
     return render_template("signup.html", error=error)
 
 @app.route("/deny", methods = ["GET"])
