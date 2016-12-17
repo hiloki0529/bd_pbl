@@ -5,6 +5,8 @@ import hashlib
 import os
 import random
 import datetime
+import uuid
+from twitter import send_DM
 
 PATH = os.path.join(os.path.dirname(__file__),"db/app.db")
 
@@ -23,12 +25,16 @@ def login(form):
     con = connector.execute(sql)
     for row in con:
         row = dict(row)
+        returner["token"] = createToken()
         returner["username"] = True
         if row["password"] == form["password"]:
             returner["password"] = True
             if row["error"] < 3:
                 row["error"] = 0
+                row["token"] = returner["token"]
                 sql = "update users set error = {error} where name = '{name}'".format(**row)
+                con = connector.execute(sql)
+                sql = "update users set token = '{token}' where name = '{name}'".format(**row)
                 con = connector.execute(sql)
         else:
             returner["password"] = False
@@ -72,7 +78,9 @@ def create(form):
             return returner
     con = sqlite3.connect(PATH)
     form = hashing(form)
-    sql = "insert into users(name,password) values('%(username)s','%(password)s')"%form
+    token = createToken()
+    form.update({"token":token})
+    sql = "insert into users(name,password,token) values('%(username)s','%(password)s','%(token)s')"%form
     con.execute(sql)
     sql = "create table %(username)s (id integer primary key, datetime text, auth text)"%form
     con.execute(sql)
@@ -108,6 +116,47 @@ def getPic():
     c = con.execute(sql)
     row = dict(c.fetchone())
     return row
+
+def putCode(token,code):
+    con = sqlite3.connect(PATH)
+    con.row_factory = sqlite3.Row
+    sql = "update users set code = '%s' where token = '%s'"%(code,token)
+    c = con.execute(sql)
+    con.commit()
+    sql = "select twitter from users where token = '%s'"%token
+    c = con.execute(sql)
+    for row in c:
+        text = "Your code is %s."%code
+        send_DM(row["twitter"],text)
+    con.close()
+
+def step2(token, code):
+    con = sqlite3.connect(PATH)
+    con.row_factory = sqlite3.Row
+    sql = "select code from users where token = '%s'"%token
+    print sql
+    c = con.execute(sql)
+    for row in c:
+        if row["code"] == code:
+            con.close()
+            return True
+        else:
+            return False
+
+def getUsername(token):
+    con = sqlite3.connect(PATH)
+    con.row_factory = sqlite3.Row
+    sql = "select name from users where token = '%s'"%token
+    c = con.execute(sql)
+    for row in c:
+        sql = "update users set token = '' where token = '%s'"%token
+        con.execute(sql)
+        con.commit()
+        con.close()
+        return row["name"]
+
+def createToken():
+    return hashlib.md5( str(uuid.uuid4()) ).hexdigest()
 
 if __name__ == "__main__":
     pic_auth()

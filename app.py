@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, session, redirect, jsonify
+from flask import Flask, render_template, request, session, redirect, jsonify, url_for
 from datetime import timedelta, datetime
 import re
-from db import login, create, getLog
+from db import login, create, getLog, putCode, step2, getUsername
+from numpy.random import randint
 
 app = Flask(__name__)
 app.secret_key = "AdfivjArifgalfgngav248dgFVifg:p4932hdvs"
@@ -15,7 +16,9 @@ def before_request():
     app.permanent_session_lifetime = timedelta(minutes=10)
     if session.get("username") is not None:
         return
-    elif request.path == "/login" or request.path == "/sign_up" or request.path == "/deny":
+    elif "/login" in request.path or request.path == "/sign_up" or request.path == "/deny":
+        if session.get("username") is not None:
+            redirect("/")
         return
     else:
         return redirect("/login")
@@ -38,8 +41,9 @@ def login_page():
         if auth["username"]:
             if auth["lock"]:
                 if auth["password"]:
-                    session['username'] = request.form['username']
-                    return redirect('/')
+                    #session['username'] = request.form['username']
+                    token = auth["token"]
+                    return redirect(url_for('login_step2', token=token))
                 else:
                     failed="failed"
             else:
@@ -99,6 +103,25 @@ def auth_pic():
     pic = getPic()
     pic["error"] = error
     return render_template("auth_pic.html", pic=pic)
+
+@app.route("/login/step2", methods = ["GET", "POST"])
+def login_step2():
+    token = request.args.get("token")
+    failed = ""
+    if request.method == "POST":
+        if step2(token, request.form["code"]):
+            session["username"] = getUsername(token)
+            return redirect("/")
+        else:
+            failed = "failed"
+    code = makeCode()
+    putCode(token,code)
+    return render_template("login_step2.html", failed = failed, token = token)
+
+def makeCode():
+    code = randint(0,10,8)
+    code = "".join(map(str,code))
+    return code
 
 if __name__=="__main__":
 	app.run(host="0.0.0.0", port=8080)
