@@ -14,6 +14,10 @@ def hashing(form):
     form = dict(form)
     form["password"] = hashlib.sha256(form["password"][0]).hexdigest()
     form["username"] = form["username"][0]
+    try:
+        form["twitter"] = form["twitter"][0]
+    except:
+        pass
     return form
 
 def login(form):
@@ -78,11 +82,9 @@ def create(form):
             return returner
     con = sqlite3.connect(PATH)
     form = hashing(form)
-    token = createToken()
-    form.update({"token":token})
-    sql = "insert into users(name,password,token) values('%(username)s','%(password)s','%(token)s')"%form
+    sql = "insert into users(name,password,twitter) values('%(username)s','%(password)s','%(twitter)s')"%form
     con.execute(sql)
-    sql = "create table %(username)s (id integer primary key, datetime text, auth text)"%form
+    sql = "create table '%(username)s' (id integer primary key, datetime text, auth text)"%form
     con.execute(sql)
     con.commit()
     con.close()

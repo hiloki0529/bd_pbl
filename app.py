@@ -15,10 +15,10 @@ def before_request():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=10)
     if session.get("username") is not None:
+        if "/login" in request.path or request.path == "/sign_up" or request.path == "/deny":
+            return redirect("/")
         return
     elif "/login" in request.path or request.path == "/sign_up" or request.path == "/deny":
-        if session.get("username") is not None:
-            redirect("/")
         return
     else:
         return redirect("/login")
